@@ -1,0 +1,26 @@
+class BinarySearch {
+    int binarySearch(int array[], int target) {
+        int left = 0;
+        int right = array.length - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2; 
+            if (array[mid] == target)
+                return mid;
+            if (array[mid] > target)
+                right = mid - 1;
+            else
+                left = mid + 1;
+        }
+        return -1;
+    }
+    public static void main(String args[]) {
+        BinarySearch binarySearchObject = new BinarySearch();
+        int array[] = {9,3,5,1,7,2,8,4,10};
+        int target = 1;
+        int result = binarySearchObject.binarySearch(array, target);
+        if (result == -1)
+            System.out.println("Element not found in array");
+        else
+            System.out.println("Element found at index: " + result);
+    }
+}

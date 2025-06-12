@@ -1,0 +1,262 @@
+import java.util.*;
+class MenuItems {
+    int id;
+    String name;
+    double price;
+    int quantity;
+
+    MenuItems(int id, String name, double price, int quantity) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.quantity = quantity;
+    }
+}
+class Reservation {
+    String customerName;
+    int tableNumber;
+
+    Reservation(String name, int table) {
+        this.customerName = name;
+        this.tableNumber = table;
+    }
+}
+class OrderItem {
+    MenuItems item;
+    int quantity;
+    double total;
+    OrderItem(MenuItems item, int quantity) {
+        this.item = item;
+        this.quantity = quantity;
+        this.total = item.price * quantity;
+    }
+}
+class Order {
+    String customerName;
+    List<OrderItem> items;
+    double total;
+    boolean isPaid;
+    String paymentMethod;
+    Order(String customerName, List<OrderItem> items) {
+        this.customerName = customerName;
+        this.items = items;
+        this.total = 0;
+        for (OrderItem i : items) this.total += i.total;
+        this.isPaid = false;
+        this.paymentMethod = "Unpaid";
+    }
+}
+public class RestaurantManagementSystem {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        List<MenuItems> menu = new ArrayList<>();
+        List<Reservation> reservations = new ArrayList<>();
+        Queue<Order> orderQueue = new LinkedList<>();
+        Set<String> customers = new HashSet<>();
+        double totalSales = 0;
+        menu.add(new MenuItems(1, "Mutton Biryani", 250.0, 10));
+        menu.add(new MenuItems(2, "Chicken 65", 150.0, 15));
+        menu.add(new MenuItems(3, "Arebian chicken", 200.0, 8));
+        menu.add(new MenuItems(4, "Biryani", 180.0, 12));
+        menu.add(new MenuItems(5, "Chicken Curry", 220.0, 10));
+        menu.add(new MenuItems(6, "plane mojito", 200.0, 8));
+        menu.add(new MenuItems(7, "chocolate milkshake", 180.0, 12));
+        menu.add(new MenuItems(8, "Chocolate Browny", 220.0, 10));
+        boolean running = true;
+        while (running) {
+            System.out.println("\n=== Main Menu ===");
+            System.out.println("1. User");
+            System.out.println("2. Admin");
+            System.out.println("0. Exit");
+            System.out.print("Choose your role: ");
+            int role = scanner.nextInt();
+            switch (role) {
+                case 1: // User mode
+                    boolean userRunning = true;
+                    while (userRunning) {
+                        System.out.println("\n--- User Menu ---");
+                        System.out.println("1. View Menu");
+                        System.out.println("2. Place Order");
+                        System.out.println("3. Pay Bill");
+                        System.out.println("4. Reserve Table");
+                        System.out.println("0. Back to Main Menu");
+                        System.out.print("Choose option: ");
+                        int choice = scanner.nextInt();
+                        switch (choice) {
+                            case 1:
+                                for (MenuItems item : menu) {
+                                    System.out.println(item.id + ". " + item.name + " - $" + item.price);
+                                }
+                                break;
+                            case 2:
+                                for (MenuItems item : menu) {
+                                    System.out.println(item.id + ". " + item.name + " - $" + item.price);
+                                }
+                                scanner.nextLine();
+                                System.out.print("Enter your name: ");
+                                String custName = scanner.nextLine();
+                                customers.add(custName);
+                                System.out.print("How many different items you want to order? ");
+                                int itemCount = scanner.nextInt();
+                                List<OrderItem> orderItems = new ArrayList<>();
+                                for (int i = 0; i < itemCount; i++) {
+                                    System.out.print("Enter item ID: ");
+                                    int itemId = scanner.nextInt();
+                                    System.out.print("Enter quantity: ");
+                                    int qty = scanner.nextInt();
+                                    boolean found = false;
+                                    for (MenuItems item : menu) {
+                                        if (item.id == itemId) {
+                                            found = true;
+                                            if (item.quantity >= qty) {
+                                                item.quantity -= qty;
+                                                orderItems.add(new OrderItem(item, qty));
+                                            } else {
+                                                System.out.println("Not enough stock for " + item.name);
+                                            }
+                                        }
+                                    }
+                                    if (!found) {
+                                        System.out.println("Item ID not found.");
+                                    }
+                                }
+                                if (!orderItems.isEmpty()) {
+                                    Order order = new Order(custName, orderItems);
+                                    orderQueue.add(order);
+                                    System.out.println("Order placed. Total: $" + order.total);
+                                } else {
+                                    System.out.println("No valid items in order.");
+                                }
+                                break;
+                            case 3:
+                                scanner.nextLine();
+                                System.out.print("Enter your name to pay bill: ");
+                                String nameForBill = scanner.nextLine();
+                                boolean hasUnpaid = false;
+                                for (Order order : orderQueue) {
+                                    if (order.customerName.equalsIgnoreCase(nameForBill) && !order.isPaid) {
+                                        System.out.println("Your Order:");
+                                        for (OrderItem oi : order.items) {
+                                            System.out.println(oi.item.name + " x" + oi.quantity + " - $" + oi.total);
+                                        }
+                                        System.out.println("Total: $" + order.total);
+                                        System.out.print("Pay now? (yes/no): ");
+                                        String confirm = scanner.nextLine();
+                                        if (confirm.equalsIgnoreCase("yes")) {
+                                            System.out.println("Select Payment Method:\n1. Cash\n2. Debit Card");
+                                            int method = scanner.nextInt();
+                                            scanner.nextLine();
+                                            order.paymentMethod = (method == 1) ? "Cash" : "Debit Card";
+                                            order.isPaid = true;
+                                            totalSales += order.total;
+                                            System.out.println("Payment successful via " + order.paymentMethod + ". Thank you!");
+                                        } else {
+                                            System.out.println("Payment skipped.");
+                                        }
+                                        hasUnpaid = true;
+                                    }
+                                }
+                                if (!hasUnpaid) {
+                                    System.out.println("No unpaid orders found.");
+                                }
+                                break;
+                            case 4:
+                                scanner.nextLine();
+                                System.out.print("Enter your name: ");
+                                String name = scanner.nextLine();
+                                System.out.print("Enter table number to reserve: ");
+                                int table = scanner.nextInt();
+                                reservations.add(new Reservation(name, table));
+                                System.out.println("Table " + table + " reserved for " + name);
+                                break;
+                            case 0:
+                                userRunning = false;
+                                break;
+
+                            default:
+                                System.out.println("Invalid option.");
+                        }
+                    }
+                    break;
+                case 2: // Admin mode
+                    int pass = 120;
+                    System.out.print("Enter Admin Password: ");
+                    int inputPassword = scanner.nextInt();
+                    if (inputPassword != pass) {
+                        System.out.println("Incorrect password!");
+                        break;
+                    }
+                    boolean adminRunning = true;
+                    while (adminRunning) {
+                        System.out.println("\n--- Admin Menu ---");
+                        System.out.println("1. View Menu");
+                        System.out.println("2. Update Menu");
+                        System.out.println("3. View Inventory & Sales");
+                        System.out.println("4. View Order Queue");
+                        System.out.println("5. View Summary");
+                        System.out.println("0. Back to Main Menu");
+                        System.out.print("Choose option: ");
+                        int choice = scanner.nextInt();
+                        switch (choice) {
+                            case 1:
+                                for (MenuItems item : menu) {
+                                    System.out.println(item.id + ". " + item.name + " - $" + item.price + " (Available: " + item.quantity + ")");
+                                }
+                                break;
+                            case 2:
+                                scanner.nextLine();
+                                System.out.print("Enter new item name: ");
+                                String itemName = scanner.nextLine();
+                                System.out.print("Enter price: ");
+                                double price = scanner.nextDouble();
+                                System.out.print("Enter quantity: ");
+                                int quantity = scanner.nextInt();
+                                int newId = menu.size() + 1;
+                                menu.add(new MenuItems(newId, itemName, price, quantity));
+                                System.out.println("Menu item added.");
+                                break;
+                            case 3:
+                                for (MenuItems item : menu) {
+                                    System.out.println(item.name + ": " + item.quantity + " available");
+                                }
+                                System.out.println("Total Sales: $" + totalSales);
+                                break;
+                            case 4:
+                                if (orderQueue.isEmpty()) {
+                                    System.out.println("No orders placed yet.");
+                                } else {
+                                    for (Order order : orderQueue) {
+                                        System.out.println("Customer: " + order.customerName);
+                                        for (OrderItem oi : order.items) {
+                                            System.out.println("  " + oi.item.name + " x" + oi.quantity + " = $" + oi.total);
+                                        }
+                                        System.out.println("Total: $" + order.total + " | Status: " +
+                                                (order.isPaid ? "Paid via " + order.paymentMethod : "Unpaid"));
+                                    }
+                                }
+                                break;
+                            case 5:
+                                System.out.println("Total Unique Users Placed Orders: " + customers.size());
+                                System.out.println("Total Money Collected: $" + totalSales);
+                                System.out.println("Total Tables Reserved: " + reservations.size());
+                                break;
+                            case 0:
+                                adminRunning = false;
+                                break;
+
+                            default:
+                                System.out.println("Invalid option.");
+                        }
+                    }
+                    break;
+                case 0:
+                    running = false;
+                    break;
+
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        }
+        System.out.println("ThankYou for visiting the Achievers Restaurant.");
+    }
+}
